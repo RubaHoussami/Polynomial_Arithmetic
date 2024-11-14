@@ -1,4 +1,4 @@
-from swagger import Swagger
+from flasgger import Swagger
 
 swagger = Swagger(template={
     "swagger": "2.0",

@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from src.extensions import swagger
 from src.logger import logger
+from src.controllers import poly_endpoints
 #from src.config import Config
 
 def create_app():
@@ -8,6 +9,7 @@ def create_app():
     #config = Config()
 
     swagger.init_app(app)
+    app.register_blueprint(poly_endpoints)
 
     return app
 
