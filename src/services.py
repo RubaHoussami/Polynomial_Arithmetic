@@ -44,22 +44,25 @@ class PolyServices:
             quotient ^= (1 << degree_diff)
             remainder ^= (divisor << degree_diff)
 
-        return {'result': {'quotient': quotient, 'remainder': remainder}}
+        return (quotient,remainder)
 
-    def invert_in_gf(self, number: int, m: int, polynomial: int = None) -> dict:
+    def invert_in_gf(self, number: int, m: int) -> dict:
         if number == 0:
             return {'error': 'Zero has no inverse in GF(2^m)'}
 
-        if not polynomial:
-            polynomial = get_irreducible_polynomial(m)
+        polynomial = get_irreducible_polynomial(m)
 
         a2, a3 = 0, polynomial
         b2, b3 = 1, number
 
         while a3 > 1:
             quotient, remainder = self.divide_in_gf(a3, b3, m)
-            temp = self.subtract_in_gf(a2, self.multiply_in_gf(quotient, b2, m, polynomial), m)
+            temp = self.subtract_in_gf(a2, self.multiply_in_gf(quotient, b2, m), m)
             a2, a3, b2, b3 = b2, b3, temp, remainder
+            print(f"Input number: {number}, m: {m}")
+            print(f"Polynomial: {polynomial}")
+            print(f"Initial values: a2={a2}, a3={a3}, b2={b2}, b3={b3}")
+
 
         if b3 != 1:
             return {'error': 'No inverse exists for number in GF(2^m)'}
@@ -67,9 +70,10 @@ class PolyServices:
         return {'result': b2}
 
     @staticmethod
-    def gf2_modulo_reduction(m: int, poly: int, irreducible_poly: int = None) -> dict:
-        if not irreducible_poly:
-            irreducible_poly = get_irreducible_polynomial(m)
+    def gf2_modulo_reduction(m: int, poly: int) -> dict:
+        
+        
+        irreducible_poly = get_irreducible_polynomial(m)
 
         poly_degree = poly.bit_length() - 1
         irr_degree = irreducible_poly.bit_length() - 1
@@ -80,3 +84,4 @@ class PolyServices:
             poly_degree = poly.bit_length() - 1
 
         return {'result': poly}
+    
