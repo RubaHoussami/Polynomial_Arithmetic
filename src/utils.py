@@ -19,7 +19,7 @@ def int_to_hex(number: int) -> str:
 def int_to_bin(number: int) -> str:
     return bin(number)
 
-def hex_bin_to_int(number: int, type: Literal['hex', 'bin']) -> int:
+def hex_bin_to_int(number: str, type: Literal['hex', 'bin']) -> int:
     if type == 'hex':
         return hex_to_int(number)
     return bin_to_int(number)
