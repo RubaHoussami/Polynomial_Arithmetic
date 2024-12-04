@@ -13,11 +13,13 @@ def hex_to_int(hex_string: str) -> int:
 def bin_to_int(binary_string: str) -> int:
     return int(binary_string, 2)
 
-def int_to_hex(number: int) -> str:
-    return hex(number)
+def int_to_hex(number: int, bits: int) -> str:
+    hexadecimal = hex(number).upper()
+    return '0x' + '0' * (bits//4 - len(hexadecimal) + 2) + hexadecimal[2:]
 
-def int_to_bin(number: int) -> str:
-    return bin(number)
+def int_to_bin(number: int, bits: int) -> str:
+    binary = bin(number)
+    return '0b' + '0' * (bits - len(binary) + 2) + binary[2:]
 
 def hex_bin_to_int(number: str, type: Literal['hex', 'bin']) -> int:
     if type == 'hex':
@@ -25,4 +27,4 @@ def hex_bin_to_int(number: str, type: Literal['hex', 'bin']) -> int:
     return bin_to_int(number)
 
 def int_to_hex_bin(number: int, bits: int) -> tuple[str, str]:
-    return int_to_hex(number), int_to_bin(number)
+    return int_to_hex(number, bits), int_to_bin(number,  bits)
