@@ -86,13 +86,13 @@ def add():
     service = PolyServices()
 
     try:
-        poly1 = data[type]
-        poly2 = data[type]
+        poly1 = data[type + '1']
+        poly2 = data[type + '2']
 
         poly1 = hex_bin_to_int(poly1, type)
-        poly2 = hex_bin_to_int(poly2, type)        
+        poly2 = hex_bin_to_int(poly2, type)
 
-        result = service.add_in_gf(poly1, poly2, m)
+        result = service.add_in_gf(m, poly1, poly2)
         hex_result, bin_result = int_to_hex_bin(result, bits)
 
         logger.info("Exit add endpoint")
@@ -177,13 +177,13 @@ def subtract():
     service = PolyServices()
     
     try:
-        poly1 = data[type]
-        poly2 = data[type]
+        poly1 = data[type + '1']
+        poly2 = data[type + '2']
 
         poly1 = hex_bin_to_int(poly1, type)
         poly2 = hex_bin_to_int(poly2, type)
 
-        result = service.subtract_in_gf(poly1, poly2, m)
+        result = service.subtract_in_gf(m, poly1, poly2)
         hex_result, bin_result = int_to_hex_bin(result, bits)
 
         logger.info("Exit subtract endpoint")
@@ -266,13 +266,13 @@ def multiply():
     service = PolyServices()
     
     try:
-        poly1 = data[type]
-        poly2 = data[type]
+        poly1 = data[type + '1']
+        poly2 = data[type + '2']
 
         poly1 = hex_bin_to_int(poly1, type)
         poly2 = hex_bin_to_int(poly2, type)
           
-        result = service.multiply_in_gf(poly1, poly2, m)
+        result = service.multiply_in_gf(m, poly1, poly2)
         hex_result, bin_result = int_to_hex_bin(result, bits)
 
         logger.info("Exit multiply endpoint")
@@ -336,6 +336,8 @@ def divide():
             description: Polynomial multiplication result
         400:
             description: Validation error
+        404:
+            description: Division by zero
         500:
             description: Internal server error
     """
@@ -356,13 +358,13 @@ def divide():
     service = PolyServices()
     
     try:
-        dividend = data[type]
-        divisor = data[type]
+        dividend = data[type + '1']
+        divisor = data[type + '2']
 
         dividend = hex_bin_to_int(dividend, type)
         divisor = hex_bin_to_int(divisor, type)
         
-        quotient, remainder = service.divide_in_gf(dividend, divisor, m)
+        quotient, remainder = service.divide_in_gf(m, dividend, divisor)
 
         quotient_hex, quotient_bin = int_to_hex_bin(quotient, bits)
         remainder_hex, remainder_bin = int_to_hex_bin(remainder, bits)
@@ -374,6 +376,8 @@ def divide():
             'quotient_bin': quotient_bin,
             'remainder_bin': remainder_bin
         }), 200
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 404
     except Exception as e:
         logger.error(f"An unexpected error occurred in divide endpoint: {str(e)}")
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
@@ -442,7 +446,7 @@ def modulo():
         poly = data[type]
         poly = hex_bin_to_int(poly, type)
 
-        result = service.modulo_in_gf(poly, m)
+        result = service.modulo_in_gf(m, poly)
         hex_result, bin_result = int_to_hex_bin(result, bits)
 
         logger.info("Exit modulo endpoint")
@@ -522,7 +526,7 @@ def invert():
         poly = data[type]
         poly = hex_bin_to_int(poly, type)
 
-        result = service.invert_in_gf(poly, m)            
+        result = service.invert_in_gf(m, poly)            
         hex_result, bin_result = int_to_hex_bin(result,bits)
 
         logger.info("Exit invert endpoint")
