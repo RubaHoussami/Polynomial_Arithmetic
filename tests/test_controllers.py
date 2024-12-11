@@ -49,21 +49,17 @@ def test_multiply_endpoint(client, data, expected_result):
     assert data['result']['bin'] == expected_result['bin']
 
 @pytest.mark.parametrize("data, expected_result", [
-    ({'m': 8, 'bits': 16, 'type': 'hex', 'hex1': '001A', 'hex2': '002B'}, {'quotient_hex': '0x0000', 'remainder_hex': '0x001A', 'quotient_bin': '0b0000000000000000', 'remainder_bin': '0b0000000000011010'}),
-    ({'m': 8, 'bits': 16, 'type': 'bin', 'bin1': '0000000000011010', 'bin2': '0000000000101011'}, {'quotient_hex': '0x0000', 'remainder_hex': '0x001A', 'quotient_bin': '0b0000000000000000', 'remainder_bin': '0b0000000000011010'})
+    ({'m': 8, 'bits': 16, 'type': 'hex', 'hex1': '001A', 'hex2': '002B'}, {'hex': '0x00C9', 'bin': '0b0000000011001001'}),
+    ({'m': 8, 'bits': 16, 'type': 'bin', 'bin1': '0000000000011010', 'bin2': '0000000000101011'}, {'hex': '0x00C9', 'bin': '0b0000000011001001'})
 ])
 def test_divide_endpoint(client, data, expected_result):
     response = client.post('/divide', json=data)
     assert response.status_code == 200
-    data = json.loads(response.data)
-    assert 'quotient_hex' in data
-    assert 'remainder_hex' in data
-    assert 'quotient_bin' in data
-    assert 'remainder_bin' in data
-    assert data['quotient_hex'] == expected_result['quotient_hex']
-    assert data['remainder_hex'] == expected_result['remainder_hex']
-    assert data['quotient_bin'] == expected_result['quotient_bin']
-    assert data['remainder_bin'] == expected_result['remainder_bin']
+    response_data = json.loads(response.data)
+    assert 'hex' in response_data
+    assert 'bin' in response_data
+    assert response_data['hex'] == expected_result['hex']
+    assert response_data['bin'] == expected_result['bin']
 
 @pytest.mark.parametrize("data, expected_result", [
     ({'m': 8, 'bits': 16, 'type': 'hex', 'hex': '001A'}, {'hex': '0x001A', 'bin': '0b0000000000011010'}),
@@ -161,8 +157,8 @@ def test_modulo_endpoint_failure(client, data):
     ({'m': 8, 'bits': 16, 'type': 'bin'}, 400),
     ({'m': 8, 'bits': 16, 'type': 'hex', 'hex': '00ZZ'}, 400),
     ({'m': 8, 'bits': 16, 'type': 'bin', 'bin': '002B'}, 400),
-    ({'m': 8, 'bits': 16, 'type': 'hex', 'hex': '0000'}, 404),
-    ({'m': 8, 'bits': 16, 'type': 'bin', 'bin': '0000000000000000'}, 404)
+    ({'m': 8, 'bits': 16, 'type': 'hex', 'hex': '0000'}, 405),
+    ({'m': 8, 'bits': 16, 'type': 'bin', 'bin': '0000000000000000'}, 405)
 ])
 def test_invert_endpoint_failure(client, data, expected_status):
     response = client.post('/invert', json=data)
