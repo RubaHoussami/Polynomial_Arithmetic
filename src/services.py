@@ -8,8 +8,9 @@ class PolyServices:
     @staticmethod
     def xor_in_gf(m: int, poly1: int, poly2: int) -> int:
         xor = poly1 ^ poly2
-        if xor.bit_length() > m:
+        while xor.bit_length() > m:
             xor ^= get_irreducible_polynomial(m)
+            m -= 1
         return xor
 
     def add_in_gf(self, m: int, poly1: int, poly2: int) -> int:
@@ -29,42 +30,38 @@ class PolyServices:
         logger.info("Enter multiply method")
         irreducible_poly = get_irreducible_polynomial(m)
         logger.info(f"Irreducible polynomial: {irreducible_poly}")
+        
         result = 0
-
-        while poly2:
-            if poly2 & 1:
+        for _ in range(m):
+            if (poly2 & 1) != 0:
                 result ^= poly1
 
-            poly1 <<= 1
+            poly2 >>= 1
 
-            if poly1 & (1 << m):
+            carry = (poly1 & (1 << (m - 1))) != 0
+            poly1 <<= 1
+            if carry:
                 poly1 ^= irreducible_poly
 
-            poly2 >>= 1
+            poly1 &= (1 << m) - 1
 
         logger.info(f"Exit multiply method with result: {result}")
         return result
     
-    @staticmethod
-    def divide_in_gf(m: int, divident: int, divisor: int) -> tuple[int, int]:
+    def divide_in_gf(self, m: int, dividend: int, divisor: int) -> tuple[int, int]:
         logger.info("Enter divide method")
         if divisor == 0:
-            raise ValueError('Division by zero')
+            logger.info("Division by zero")
+            raise ZeroDivisionError(f"Division by zero in GF(2^{m})")
 
-        quotient = 0
-        remainder = divident
+        irreducible_poly = get_irreducible_polynomial(m)
+        logger.info(f"Irreducible polynomial: {irreducible_poly}")
 
-        divisor_degree = divisor.bit_length() - 1
+        divisor_inv = self.invert_in_gf(m, divisor)
+        result = self.multiply_in_gf(m, dividend, divisor_inv)
 
-        while remainder.bit_length() - 1 >= divisor_degree:
-            degree_diff = remainder.bit_length() - 1 - divisor_degree
-            if degree_diff < 0:
-                break
-            quotient ^= (1 << degree_diff)
-            remainder ^= (divisor << degree_diff)
-
-        logger.info(f"Exit divide method with quotient: {quotient} and remainder: {remainder}")
-        return quotient, remainder
+        logger.info(f"Exit divide method with result: {result}")
+        return result
 
     @staticmethod
     def modulo_in_gf(m: int, poly: int) -> int:
@@ -72,40 +69,39 @@ class PolyServices:
         irreducible_poly = get_irreducible_polynomial(m)
         logger.info(f"Irreducible polynomial: {irreducible_poly}")
 
-        poly_degree = poly.bit_length() - 1
-        irreducible_degree = irreducible_poly.bit_length() - 1
-
-        while poly_degree >= irreducible_degree:
-            shift = poly_degree - irreducible_degree
-            poly ^= (irreducible_poly << shift)
-            poly_degree = poly.bit_length() - 1
+        while poly.bit_length() > m + 1:
+            shift = poly.bit_length() - (m + 1)
+            poly ^= irreducible_poly << shift
 
         logger.info(f"Exit modulo method with result: {poly}")
         return poly
 
+
     def invert_in_gf(self, m: int, poly: int) -> int:
         logger.info("Enter invert method")
         if poly == 0:
+            logger.info(f"Zero has no inverse in GF(2^{m})")
             raise ValueError(f"Zero has no inverse in GF(2^{m})")
 
         irreducible_poly = get_irreducible_polynomial(m)
         logger.info(f"Irreducible polynomial: {irreducible_poly}")
 
-        a2, a3 = 0, irreducible_poly
-        b2, b3 = 1, poly
+        u = poly
+        v = irreducible_poly
+        g1 = 1
+        g2 = 0
 
-        while b3 != 1:
-            if b3 == 0:
-                raise ValueError(f'No inverse exists for {poly} in GF(2^{m})')
+        while u != 1 and v != 0:
+            if u.bit_length() < v.bit_length():
+                u, v = v, u
+                g1, g2 = g2, g1
 
-            quotient, remainder = self.divide_in_gf(m, a3, b3)
+            shift = u.bit_length() - v.bit_length()
+            u ^= v << shift
+            g1 ^= g2 << shift
 
-            multiply = self.multiply_in_gf(m, quotient, b2)
-            temp = self.subtract_in_gf(m, a2, multiply)
-
-            a2, a3, b2, b3 = b2, b3, temp, remainder
-
-            logger.debug(f"Loop iteration: a2={a2}, a3={a3}, b2={b2}, b3={b3}")
-
-        logger.info(f"Exit invert method with result: {b2}")
-        return b2
+        if u == 1:
+            result = self.modulo_in_gf(m, g1)
+            logger.info(f"Exit invert method with result: {result}")
+            return result
+        raise ValueError(f"No inverse exists for {poly} in GF(2^{m})")

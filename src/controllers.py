@@ -338,6 +338,8 @@ def divide():
             description: Validation error
         404:
             description: Division by zero
+        405:
+            description: Polynomial not invertible
         500:
             description: Internal server error
     """
@@ -364,20 +366,19 @@ def divide():
         dividend = hex_bin_to_int(dividend, type)
         divisor = hex_bin_to_int(divisor, type)
         
-        quotient, remainder = service.divide_in_gf(m, dividend, divisor)
+        result = service.divide_in_gf(m, dividend, divisor)
 
-        quotient_hex, quotient_bin = int_to_hex_bin(quotient, bits)
-        remainder_hex, remainder_bin = int_to_hex_bin(remainder, bits)
+        result_hex, result_bin = int_to_hex_bin(result, bits)
 
         logger.info("Exit divide endpoint")
         return jsonify({
-            'quotient_hex': quotient_hex,
-            'remainder_hex': remainder_hex,
-            'quotient_bin': quotient_bin,
-            'remainder_bin': remainder_bin
+            'hex': result_hex,
+            'bin': result_bin
         }), 200
-    except ValueError as e:
+    except ZeroDivisionError as e:
         return jsonify({'error': str(e)}), 404
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 405
     except Exception as e:
         logger.error(f"An unexpected error occurred in divide endpoint: {str(e)}")
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
@@ -501,7 +502,7 @@ def invert():
             description: Polynomial inversion result
         400:
             description: Validation error
-        404:
+        405:
             description: Polynomial not invertible
         500:
             description: Internal server error
@@ -526,7 +527,7 @@ def invert():
         poly = data[type]
         poly = hex_bin_to_int(poly, type)
 
-        result = service.invert_in_gf(m, poly)            
+        result = service.invert_in_gf(m, poly)
         hex_result, bin_result = int_to_hex_bin(result,bits)
 
         logger.info("Exit invert endpoint")
@@ -537,7 +538,7 @@ def invert():
             }
         }), 200
     except ValueError as e:
-        return jsonify({'error': str(e)}), 404
+        return jsonify({'error': str(e)}), 405
     except Exception as e:
         logger.error(f"An unexpected error occurred in invert endpoint: {str(e)}")
         return jsonify({'error': f'Internal server error: {str(e)}'}), 500
