@@ -1,4 +1,5 @@
 from flask import Flask, jsonify
+from flask_cors import CORS
 from src.extensions import swagger
 from src.logger import logger
 from src.controllers import poly_endpoints
@@ -7,6 +8,7 @@ def create_app():
     app = Flask(__name__)
     swagger.init_app(app)
     app.register_blueprint(poly_endpoints)
+    CORS(app)
     return app
 
 app = create_app()
